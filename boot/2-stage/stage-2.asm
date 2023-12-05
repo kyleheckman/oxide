@@ -2,9 +2,11 @@
 [bits 32]
 
 _start:
-	push 0
+	push 20
+	push 5 
 	push stg_2_str
 	call print_str_32
+	pop edx
 	pop edx
 	pop edx
 
@@ -73,6 +75,8 @@ enable_longmode:
 	jmp gdt_64.code:init_64
 
 [bits 64]
+%include "VGA_driver.asm"
+
 init_64:
 	mov ax, gdt_64.data
 	mov ds, ax
@@ -84,8 +88,48 @@ init_64:
 	; print success message
 	mov rax, 0x2f592f412f4b2f4f
 	mov qword[0xb8000], rax
+
+	;
+	push 0
+	push 0
+	push line_1
+	call VGA_write
+	pop rdx
+	pop rdx
+
+	mov rcx, 23
+.loop:
+	inc rdx
+	push rdx
+	push line_2
+	call VGA_write
+	pop rdx
+	pop rdx
+	loop .loop
+
+	inc rdx
+	push rdx
+	push line_1
+	call VGA_write
+	pop rdx
+	pop rdx
+	pop rdx
+	
+	xor rdx, rdx
+	push 2
+	push 1
+	push longm_success_str
+	call VGA_write
+	pop rdx
+	pop rdx
+	pop rdx
+
 	hlt
 
-stg_2_str db "STAGE 2 STARTED",0
+stg_2_str: db "STAGE 2 STARTED",0
+longm_success_str: db "64-BIT Operation Set",0
 
-times 512 - ($-$$) db 'A'
+line_1: db	"////////////////////////////////////////////////////////////////////////////////",0
+line_2: db	"][                                                                            ][",0
+
+times 1024 - ($-$$) db 'A'

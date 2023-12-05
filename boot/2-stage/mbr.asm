@@ -193,7 +193,7 @@ print_str_32:
 ; declarations
 
 ; constants
-SECTORS_TO_READ equ 0x1
+SECTORS_TO_READ equ 2
 ST2_OFFSET equ 0x1000
 
 ; variables
