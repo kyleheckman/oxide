@@ -45,10 +45,6 @@ boot_init:
 	cmp al, SECTORS_TO_READ
 	jne .sec_read_error	; check correct number of sectors were read
 
-	push read_success
-	call print_string
-	pop ax
-
 	;--------------------------------------------------
 	; load GDT, far jump to PM initialization
 	cli			; disable interrupts
@@ -59,42 +55,42 @@ boot_init:
 	jmp gdt_32.code:init_pm
 
 .read_error:
-	push read_err_str
-	call print_string
-	pop dx
-	jmp $
+;	push read_err_str
+;	call print_string
+;	pop dx
+	hlt
 
 .sec_read_error:
-	push sec_err_str
-	call print_string
-	pop dx
-	jmp $
+;	push sec_err_str
+;	call print_string
+;	pop dx
+	hlt
 
 
 
-print_string:
-	push bp			; store initial base ptr
-	mov bp, sp
-	mov si, [bp+4]		; load param 'string' from stack into SI
-	mov ax, 0xb800
-	mov es, ax
-	mov di, 0
-	mov dx, 0xa0
-	imul dx, [LINE_OFF]
-	add di, dx
-	mov ah, 0x1f
-	lodsb
-.loop:
-	test al, 0xff
-	jz .exit
-	stosw
-	lodsb
-	jmp .loop
-.exit:
-	inc long[LINE_OFF]
-	mov sp, bp		; restore original stack ptrs
-	pop bp
-	ret
+;print_string:
+;	push bp			; store initial base ptr
+;	mov bp, sp
+;	mov si, [bp+4]		; load param 'string' from stack into SI
+;	mov ax, 0xb800
+;	mov es, ax
+;	mov di, 0
+;	mov dx, 0xa0
+;	imul dx, [LINE_OFF]
+;	add di, dx
+;	mov ah, 0x1f
+;	lodsb
+;.loop:
+;	test al, 0xff
+;	jz .exit
+;	stosw
+;	lodsb
+;	jmp .loop
+;.exit:
+;	inc long[LINE_OFF]
+;	mov sp, bp		; restore original stack ptrs
+;	pop bp
+;	ret
 
 [bits 32]
 ;--------------------------------------------------
@@ -111,12 +107,10 @@ init_pm:
 
 	call is_A20_on		; confirm A20 gate in on, enable if not
 
-	push test_str
-	call print_str_32
-	pop edx
+	jmp ST2_OFFSET		; go to bootloader second stage
 
-	jmp ST2_OFFSET
-
+;-------------------------------------------------
+; check is A20 line is enabled, run A20 init if A20 disabled
 is_A20_on:
 	pushad
 	mov edi, 0x112345
@@ -128,6 +122,7 @@ is_A20_on:
 	jne init_A20
 	ret
 
+; initialize A20 line using keyboard controller
 init_A20:
 	call .a20wait
 	mov al, 0xad		; send keyb command 0xAD
@@ -167,27 +162,27 @@ init_A20:
 	jz .a20wait2
 	ret
 
-print_str_32:
-	push ebp
-	mov ebp, esp
-	mov esi, [ebp+8]
-	mov edi, 0xb8000
-	mov edx, 0xa0
-	imul edx, [LINE_OFF]
-	add edi, edx
-	mov ah, 0x1f
-	lodsb
-.loop:
-	test al, 0xff
-	jz .exit
-	stosw
-	lodsb
-	jmp .loop
-.exit:
-	inc long[LINE_OFF]
-	mov esp, ebp
-	pop ebp
-	ret
+;print_str_32:
+;	push ebp
+;	mov ebp, esp
+;	mov esi, [ebp+8]
+;	mov edi, 0xb8000
+;	mov edx, 0xa0
+;	imul edx, [LINE_OFF]
+;	add edi, edx
+;	mov ah, 0x1f
+;	lodsb
+;.loop:
+;	test al, 0xff
+;	jz .exit
+;	stosw
+;	lodsb
+;	jmp .loop
+;.exit:
+;	inc long[LINE_OFF]
+;	mov esp, ebp
+;	pop ebp
+;	ret
 
 ;--------------------------------------------------
 ; declarations
@@ -198,11 +193,11 @@ ST2_OFFSET equ 0x1000
 
 ; variables
 boot_drive db 0
-LINE_OFF dd 0
-read_err_str db "READ ERROR",0
-sec_err_str db "SECTORS READ MISMATCH",0
-read_success db "READ SUCCESS",0
-test_str db "PM INITIALIZED",0
+;LINE_OFF dd 0
+;read_err_str db "READ ERROR",0
+;sec_err_str db "SECTORS READ MISMATCH",0
+;read_success db "READ SUCCESS",0
+;test_str db "PM INITIALIZED",0
 
 ;--------------------------------------------------
 ; padding and magic number
