@@ -29,6 +29,12 @@ boot_init:
 	mov [boot_drive], dl
 
 	;--------------------------------------------------
+	; disable text cursor
+	mov ah, 0x01
+	mov ch, 0x3f
+	int 10h
+
+	;--------------------------------------------------
 	; read bootloader second stage into memory
 	; second stage initializes long mode and calls kernel
 	mov ah, 0x2		; INT13h READ
