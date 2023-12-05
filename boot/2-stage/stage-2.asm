@@ -2,22 +2,16 @@
 [bits 32]
 
 _start:
-	push 20
-	push 5 
-	push stg_2_str
-	call print_str_32
-	pop edx
-	pop edx
-	pop edx
+;--------------------------------------------------
+; second stage entry point
 
 	jmp enable_longmode
 
-%include "print_string.asm"
 %include "gdt.asm"
 
-;--------------------------------------------------
-; process to enable longmode, detailed in AMD64 Programmer's Manual
 enable_longmode:
+;--------------------------------------------------
+; enable longmode, process detailed in AMD64 Programmer's Manual
 
 	;--------------------------------------------------
 	; disable paging
@@ -78,6 +72,11 @@ enable_longmode:
 %include "VGA_driver.asm"
 
 init_64:
+;--------------------------------------------------
+; set segment registers for longmode, clear screen
+
+	;--------------------------------------------------
+	; set segment registers with updates GDT data segment descriptor
 	mov ax, gdt_64.data
 	mov ds, ax
 	mov es, ax
@@ -85,37 +84,11 @@ init_64:
 	mov gs, ax
 	mov ss, ax
 
-	; print success message
-	mov rax, 0x2f592f412f4b2f4f
-	mov qword[0xb8000], rax
+	;--------------------------------------------------
+	; clear screen
+	call clear_screen
 
-	;
-	push 0
-	push 0
-	push line_1
-	call VGA_write
-	pop rdx
-	pop rdx
-
-	mov rcx, 23
-.loop:
-	inc rdx
-	push rdx
-	push line_2
-	call VGA_write
-	pop rdx
-	pop rdx
-	loop .loop
-
-	inc rdx
-	push rdx
-	push line_1
-	call VGA_write
-	pop rdx
-	pop rdx
-	pop rdx
-	
-	xor rdx, rdx
+	; send success message
 	push 2
 	push 1
 	push longm_success_str
@@ -126,10 +99,49 @@ init_64:
 
 	hlt
 
-stg_2_str: db "STAGE 2 STARTED",0
+clear_screen:
+;--------------------------------------------------
+; clear display and print screen borders
+
+	;--------------------------------------------------
+	; print top border
+	push 0
+	push 0
+	push tb_bord
+	call VGA_write
+	pop rdx
+	pop rdx			; save previous line in RDX
+
+
+	;--------------------------------------------------
+	; print side borders
+	mov rcx, 23		; set number of rows to print
+.loop:
+	inc rdx			; increment line number
+	push rdx
+	push sd_bord
+	call VGA_write
+	pop rdx
+	pop rdx			; save previous line number
+	loop .loop
+
+	;--------------------------------------------------
+	; print bottom border
+	inc rdx			; increment line number
+	push rdx
+	push tb_bord
+	call VGA_write
+	pop rdx			; clear remaining values stores to stack
+	pop rdx
+	pop rdx
+
+	ret
+
+;--------------------------------------------------
+; string declarations
 longm_success_str: db "64-BIT Operation Set",0
 
-line_1: db	"////////////////////////////////////////////////////////////////////////////////",0
-line_2: db	"][                                                                            ][",0
+tb_bord: db	"[>----------------------------------------------------------------------------<]",0
+sd_bord: db	"[                                                                              ]",0
 
 times 1024 - ($-$$) db 'A'
