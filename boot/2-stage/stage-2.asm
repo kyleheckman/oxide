@@ -1,4 +1,4 @@
-[org 0x1000]
+[org 0x7800]
 [bits 32]
 
 _start:
@@ -144,4 +144,4 @@ longm_success_str: db "64-BIT Operation Set",0
 tb_bord: db	"[>----------------------------------------------------------------------------<]",0
 sd_bord: db	"[                                                                              ]",0
 
-times 1024 - ($-$$) db 'A'
+times 1024 - ($-$$) db 0 
