@@ -92,8 +92,6 @@ boot_init:
 ;	pop dx
 	hlt
 
-
-
 ;print_string:
 ;	push bp			; store initial base ptr
 ;	mov bp, sp
