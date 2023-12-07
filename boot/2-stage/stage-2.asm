@@ -70,6 +70,7 @@ enable_longmode:
 
 [bits 64]
 %include "VGA_driver.asm"
+%include "DMA_driver.asm"
 
 init_64:
 ;--------------------------------------------------
@@ -140,6 +141,7 @@ clear_screen:
 ;--------------------------------------------------
 ; string declarations
 longm_success_str: db "64-BIT Operation Set",0
+load_kernel_str: db "Preparing Kernel...",0
 
 tb_bord: db	"[>----------------------------------------------------------------------------<]",0
 sd_bord: db	"[                                                                              ]",0

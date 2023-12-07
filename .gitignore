@@ -36,6 +36,10 @@
 *.x86_64
 *.hex
 
+# Binaries
+*.bin
+*.img
+
 # Debug files
 *.dSYM/
 *.su
@@ -50,3 +54,6 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Depracated files
+boot/x86
