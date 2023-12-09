@@ -4,6 +4,8 @@
 
 [bits 64]
 
+%include "DMA_driver.asm"
+
 ;--------------------------------------------------
 ; enumeration declarations
 
@@ -30,3 +32,36 @@ RESET:			equ 1<<2	; clear=reset, set=normal operation
 ; setting datarate reg also sets config_control
 DR_500:			equ 0		; 500Kpbs, used by 1.44M, 1.2M floppy
 DR_1M:			equ 3		; 1Mbps, user by 2.88M floppy
+
+; Main Status Reg (MSR) description
+;
+;	|  7  |  6  |  5  |  4  |  3  |  2  |  1  |  0  |
+;	| MRQ | DIO | NDMA| BUSY| ACTD| ACTC| ACTB| ACTA|
+;
+; MRQ = 1 when FIFO is read
+; DIO = 1 (write expected), DIO = 0 (read expected)
+; NDMA = 0 (DMA), NDMA = 1 (no-DMA)
+; BUSY = 1 (controller is busy)
+;
+; ACTA,ACTB,ACTC,ACTD = 1 (drive is seeking)
+
+floppy_write_command:
+;-------------------------------------------------
+; send command to floppy FIFO
+; param1: command
+	push rbp
+	mov rbp, rsp			; store stack pointer
+
+	call .MSR_wait			; wait until FIFO is available
+
+	mov rax, [rbp+16]		; retrieve command from stack
+	out DATA_FIFO, rax		; send command to I/O port
+
+	mov rsp, rbp			; reset stack
+	pop rbp
+	
+.MSR_wait:
+	in rax, MAIN_STATUS_REG		; read MSR from I/O
+	test rax, 0x80			; check if MRQ == 1
+	jz .MSR_wait
+	ret
