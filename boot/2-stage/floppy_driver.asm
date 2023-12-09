@@ -65,3 +65,25 @@ floppy_write_command:
 	test rax, 0x80			; check if MRQ == 1
 	jz .MSR_wait
 	ret
+
+floppy_read_data:
+;--------------------------------------------------
+; read data from FIFO buffer
+; param1: address to store result
+	push rbp
+	mov rbp, rsp			; store stack pointer
+
+	call .MSR_wait			; wait until FIFO available
+
+	in rax, DATA_FIFO		; grab byte from FIFO
+	mov rbx, [rbp+16]
+	mov byte[rbx], rax		; store value at address
+
+	mov rsp, rbp			; reset stack
+	pop rbp
+
+.MSR_wait:
+	in rax, MAIN_STATUS_REG		; read MSR from I/O
+	test rax, 0x80			; check if MRQ == 1
+	jz .MSR_wait
+	ret
