@@ -87,3 +87,29 @@ floppy_read_data:
 	test rax, 0x80			; check if MRQ == 1
 	jz .MSR_wait
 	ret
+
+floppy_check_interrupt:
+;--------------------------------------------------
+; send SENSE_INTERRUPT command and get return values
+; param1: address to store result
+	push rbp
+	mov rbp, rsp			; store stack pointer
+
+	push 8				; code for SENSE_INTERRUPT command
+	call floppy_write_command
+	pop rdx
+
+	mov rax, [rbp+16]		; mov address into RAX
+	push rax
+	call floppy_read_data		; get first return byte
+	pop rax
+	inc rax
+	push rax
+	call floppy_read_data		; get second return byte
+	pop rax
+
+	mov rsp, rbp			; reset stack
+	pop rbp
+
+	ret
+
