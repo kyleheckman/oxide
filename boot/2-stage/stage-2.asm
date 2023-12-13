@@ -9,6 +9,21 @@ _start:
 
 %include "gdt.asm"
 
+pack_tss:
+;--------------------------------------------------
+; updates tss base with memory address of tss_entry
+	mov eax, tss_entry	; get address of tss_entry
+	mov ebx, gdt_64
+	add ebx, gdt_64.tss	; get absolute address of get_64.tss
+	mov word[ebx + 16], ax	; copy low 16 bits of tss_entry address into base
+	sar eax, 16
+	mov byte[ebx + 32], al	; copy bits[16 - 23] of tss_entry addr
+	sar eax, 8
+	mov byte[ebx + 56], al	; copy bits[24 - 31] of tss entry addr
+	sar eax, 8
+	mov long[ebx+64], eax	; copy high 32 bits of tss_entry addr
+	ret
+
 enable_longmode:
 ;--------------------------------------------------
 ; enable longmode, process detailed in AMD64 Programmer's Manual
@@ -65,6 +80,7 @@ enable_longmode:
 
 	;--------------------------------------------------
 	; load new GDT, far jump to init_64
+	call pack_tss
 	lgdt [gdt_64.pointer]
 	jmp gdt_64.code:init_64
 
