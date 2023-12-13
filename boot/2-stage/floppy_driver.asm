@@ -113,3 +113,10 @@ floppy_check_interrupt:
 
 	ret
 
+floppy_reset:
+;--------------------------------------------------
+; reset floppy controller
+	out DIG_OUTPUT, 0x00		; send 0x00 to floppy DOR, disable controller
+
+	out DIG_OUTPUT, 0x1d		; MOTA on, SEL drive 0x01, IRQ on, RESET normal
+
