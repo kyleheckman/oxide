@@ -126,7 +126,7 @@ init_pm:
 	mov fs, ax
 	mov gs, ax
 	mov ss, ax
-	mov ebp, 0x10000	; move stack_top to addr 0x10000
+	mov ebp, PM_STACK	; move stack_top to addr PM_STACK
 	mov esp, ebp		; reset stack pointers
 
 	call is_A20_on		; confirm A20 gate in on, enable if not
@@ -212,8 +212,9 @@ init_A20:
 ; declarations
 
 ; constants
-SECTORS_TO_READ equ 2
-ST2_OFFSET equ 0x7800
+SECTORS_TO_READ: equ 2
+ST2_OFFSET: equ 0x7800
+PM_STACK: equ 0x10000
 
 ; variables
 boot_drive db 0
